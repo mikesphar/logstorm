@@ -27,10 +27,8 @@ func udp_loop(target string, worker int, msg_rate int, wg *sync.WaitGroup) {
 	}
 
 	for {
-		for i := 0; i < msg_rate; i++ {
-			_ = udp_send_measure(conn, worker)
-		}
-		time.Sleep(time.Second)
+		_ = udp_send_measure(conn, worker)
+		time.Sleep(time.Duration(1000000000 / msg_rate))
 	}
 }
 
