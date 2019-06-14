@@ -10,5 +10,5 @@ Usage:
 Will generate (potentially very large amounts of) messages that look like this:
 
 ```
-test log message from ./generate_logs: worker 2 at 2019-06-14 15:56:31.502922819 +0000 UTC m=+3.001445236
+test log message from ./logstorm worker 2 at 2019-06-14 15:56:31.502922819 +0000 UTC m=+3.001445236
 ```
