@@ -4,10 +4,10 @@ A very bad go program for generating way too many log messages and blasts them a
 Usage:
 
 *  -rate int
-  *  Number of messages each worker will generate every second (default 1)
+   -  Number of messages each worker will generate every second (default 1)
 
 *  -workers int
-  * Number of workers that will simultaneously generate log messages (default 1)
+   - Number of workers that will simultaneously generate log messages (default 1)
 
 Will generate (potentially very large amounts of) messages that look like this:
 
