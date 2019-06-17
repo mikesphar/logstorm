@@ -5,12 +5,17 @@ Usage:
 
 *  -rate int
    -  Number of messages each worker will generate every second (default 1)
-
+*  -message string
+   -  Message payload for every log message (default "Test Message")
+*  -rate int
+   -  Number of messages each worker will generate every second (default 1)
+*  -source string
+   -  String identifying the source of the log messages (default "logstorm")
 *  -workers int
-   - Number of workers that will simultaneously generate log messages (default 1)
+   -  Number of workers that will simultaneously generate log messages (default 1)
 
 Will generate (potentially very large amounts of) messages that look like this:
 
 ```
-test log message from ./logstorm worker 2 at 2019-06-14 15:56:31.502922819 +0000 UTC m=+3.001445236
+Jun 17 14:08:11 127.0.0.1  {"Source":"logstorm","Worker":0,"Message":"Test Message","Timestamp":"2019-06-17T14:08:11.676208505Z"}
 ```
