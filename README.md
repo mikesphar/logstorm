@@ -1,5 +1,5 @@
 # logstorm
-A very bad go program for generating way too many log messages and blasts them at the local host syslog port (UDP 514)
+A very bad go program for generating way too many log messages and blasting them at the local host syslog port (UDP 514)
 
 Usage:
 
