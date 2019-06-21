@@ -22,5 +22,6 @@ Jun 21 22:14:39 support01.stq.braintreepayments.com logstorm[11790]: {"Source":"
 ```
 
 Plain text:
-```Jun 21 22:11:41 support01.stq.braintreepayments.com logstorm[21343]: From logstorm: worker 0 at 2019-06-21 22:11:41.24345764 +0000 UTC m=+3.001405705 - Test Message
+```
+Jun 21 22:11:41 support01.stq.braintreepayments.com logstorm[21343]: From logstorm: worker 0 at 2019-06-21 22:11:41.24345764 +0000 UTC m=+3.001405705 - Test Message
 ```
