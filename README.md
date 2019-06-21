@@ -3,8 +3,9 @@ A very bad go program for generating way too many log messages and blasting them
 
 Usage:
 
-*  -rate int
-   -  Number of messages each worker will generate every second (default 1)
+
+*  -json
+   -  Format message as json
 *  -message string
    -  Message payload for every log message (default "Test Message")
 *  -rate int
