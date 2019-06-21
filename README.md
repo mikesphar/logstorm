@@ -16,6 +16,11 @@ Usage:
 
 Will generate (potentially very large amounts of) messages that look like this:
 
+JSON:
 ```
-Jun 17 14:08:11 127.0.0.1  {"Source":"logstorm","Worker":0,"Message":"Test Message","Timestamp":"2019-06-17T14:08:11.676208505Z"}
+Jun 21 22:14:39 support01.stq.braintreepayments.com logstorm[11790]: {"Source":"logstorm","Worker":1,"Message":"Test Message","Timestamp":"2019-06-21T22:14:39.880695653Z"}
+```
+
+Plain text:
+```Jun 21 22:11:41 support01.stq.braintreepayments.com logstorm[21343]: From logstorm: worker 0 at 2019-06-21 22:11:41.24345764 +0000 UTC m=+3.001405705 - Test Message
 ```
