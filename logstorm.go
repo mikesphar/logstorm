@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func send_logs(target string, worker int, msg_rate int, source string, message string, wg *sync.WaitGroup) {
+func send_logs(target string, worker int, msg_rate int, source string, message string, json_out bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	conn, err := net.Dial("udp", target)
@@ -33,8 +33,14 @@ func send_logs(target string, worker int, msg_rate int, source string, message s
 			Message:   message,
 			Timestamp: time.Now(),
 		}
-		json_message, _ := json.Marshal(raw_message)
-		fmt.Fprintf(conn, string(json_message))
+
+		if json_out {
+			json_message, _ := json.Marshal(raw_message)
+			fmt.Fprintf(conn, string(json_message))
+		} else {
+			fmt.Fprintf(conn, "From %s: worker %d at %s - %s", raw_message.Source, raw_message.Worker, raw_message.Timestamp, raw_message.Message)
+		}
+
 		time.Sleep(time.Duration(1000000000 / msg_rate))
 	}
 }
@@ -46,11 +52,13 @@ func main() {
 
 	var msg_rate, workers int
 	var source, message string
+	var json_out bool
 
 	flag.IntVar(&msg_rate, "rate", 1, "Number of messages each worker will generate every second")
 	flag.IntVar(&workers, "workers", 1, "Number of workers that will simultaneously generate log messages")
 	flag.StringVar(&source, "source", "logstorm", "String identifying the source of the log messages")
 	flag.StringVar(&message, "message", "Test Message", "Message payload for every log message")
+	flag.BoolVar(&json_out, "json", false, "Format message as json")
 
 	flag.Parse()
 
@@ -58,11 +66,16 @@ func main() {
 	fmt.Printf("Message source: %s\n", source)
 	fmt.Printf("Message text: %s\n", message)
 
+	if json_out {
+		fmt.Printf("Format: json \n")
+	} else {
+		fmt.Printf("Format: text \n")
+	}
 	var wg sync.WaitGroup
 	wg.Add(workers)
 
 	for i := 0; i < workers; i++ {
-		go send_logs(target+":"+port, i, msg_rate, source, message, &wg)
+		go send_logs(target+":"+port, i, msg_rate, source, message, json_out, &wg)
 	}
 
 	wg.Wait()
