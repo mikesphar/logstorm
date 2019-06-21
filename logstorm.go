@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"net"
+	"log"
+	"log/syslog"
 	"sync"
 	"time"
 )
@@ -12,11 +13,10 @@ import (
 func send_logs(target string, worker int, msg_rate int, source string, message string, json_out bool, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	conn, err := net.Dial("udp", target)
-	defer conn.Close()
+	sysLog, err := syslog.Dial("udp", target,
+		syslog.LOG_WARNING|syslog.LOG_DAEMON, "logstorm")
 	if err != nil {
-		fmt.Println("Error opening connecton:  %v", err)
-		return
+		log.Fatal(err)
 	}
 
 	type LogMessage struct {
@@ -36,9 +36,9 @@ func send_logs(target string, worker int, msg_rate int, source string, message s
 
 		if json_out {
 			json_message, _ := json.Marshal(raw_message)
-			fmt.Fprintf(conn, string(json_message))
+			fmt.Fprintf(sysLog, string(json_message))
 		} else {
-			fmt.Fprintf(conn, "From %s: worker %d at %s - %s", raw_message.Source, raw_message.Worker, raw_message.Timestamp, raw_message.Message)
+			fmt.Fprintf(sysLog, "From %s: worker %d at %s - %s", raw_message.Source, raw_message.Worker, raw_message.Timestamp, raw_message.Message)
 		}
 
 		time.Sleep(time.Duration(1000000000 / msg_rate))
