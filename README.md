@@ -4,6 +4,8 @@ A very bad go program for generating way too many log messages and blasting them
 Usage:
 
 
+*  -count int
+   -  Number of messages to generate per worker (-1 for unlimited) (default -1)
 *  -json
    -  Format message as json
 *  -message string
