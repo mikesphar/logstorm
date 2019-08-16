@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"log/syslog"
+	"strings"
 	"sync"
 	"time"
 )
@@ -15,8 +16,18 @@ type Flags struct {
 	Workers   int
 	Source    string
 	Message   string
+	Size      int
 	Msg_Count int
 	Json_Out  bool
+}
+
+func pad_string(str string, padchar rune, padsize int) string {
+	padcount := padsize - len(str)
+	if padcount > 0 {
+		return str + strings.Repeat(string(padchar), padcount)
+	} else {
+		return str
+	}
 }
 
 func send_logs(target string, worker int, flags *Flags, wg *sync.WaitGroup) {
@@ -47,6 +58,11 @@ func send_logs(target string, worker int, flags *Flags, wg *sync.WaitGroup) {
 		Worker:  worker,
 	}
 
+	padchar := rune('X')
+	if flags.Size > 0 {
+		raw_message.Message = pad_string(raw_message.Message, padchar, flags.Size)
+	}
+
 	for i := 0; i < flags.Msg_Count || infinite; i++ {
 		raw_message.Timestamp = time.Now()
 
@@ -75,6 +91,7 @@ func main() {
 	flag.StringVar(&flags.Message, "message", "Test Message", "Message payload for every log message")
 	flag.IntVar(&flags.Msg_Count, "count", -1, "Number of messages to generate per worker (-1 for unlimited)")
 	flag.BoolVar(&flags.Json_Out, "json", false, "Format message as json")
+	flag.IntVar(&flags.Size, "size", 0, "Minimum size of message string, pads message to this size if it's less than")
 
 	flag.Parse()
 
