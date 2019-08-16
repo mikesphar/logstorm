@@ -41,13 +41,14 @@ func send_logs(target string, worker int, flags *Flags, wg *sync.WaitGroup) {
 		infinite = true
 	}
 
+	raw_message := LogMessage{
+		Source:  flags.Source,
+		Message: flags.Message,
+		Worker:  worker,
+	}
+
 	for i := 0; i < flags.Msg_Count || infinite; i++ {
-		raw_message := LogMessage{
-			Source:    flags.Source,
-			Message:   flags.Message,
-			Worker:    worker,
-			Timestamp: time.Now(),
-		}
+		raw_message.Timestamp = time.Now()
 
 		if flags.Json_Out {
 			json_message, _ := json.Marshal(raw_message)
