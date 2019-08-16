@@ -13,7 +13,7 @@ Usage:
 *  -rate int
    -  Number of messages each worker will generate every second (default 1)
 *  -size int
-   -  Minimum size of message string, pads message to this size if it's less than
+   -  Minimum size of message string, pads message with random characters to this size if it's less than
 *  -source string
    -  String identifying the source of the log messages (default "logstorm")
 *  -workers int

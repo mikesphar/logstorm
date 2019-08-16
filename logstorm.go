@@ -6,10 +6,20 @@ import (
 	"fmt"
 	"log"
 	"log/syslog"
-	"strings"
+	"math/rand"
 	"sync"
 	"time"
 )
+
+var chars = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+func randChars(n int) string {
+	randstr := make([]rune, n)
+	for i := range randstr {
+		randstr[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(randstr)
+}
 
 type Flags struct {
 	Msg_Rate  int
@@ -21,10 +31,10 @@ type Flags struct {
 	Json_Out  bool
 }
 
-func pad_string(str string, padchar rune, padsize int) string {
+func pad_string(str string, padsize int) string {
 	padcount := padsize - len(str)
 	if padcount > 0 {
-		return str + strings.Repeat(string(padchar), padcount)
+		return str + randChars(padcount)
 	} else {
 		return str
 	}
@@ -47,7 +57,6 @@ func send_logs(target string, worker int, flags *Flags, wg *sync.WaitGroup) {
 	}
 
 	var infinite bool = false
-
 	if flags.Msg_Count < 0 {
 		infinite = true
 	}
@@ -58,13 +67,18 @@ func send_logs(target string, worker int, flags *Flags, wg *sync.WaitGroup) {
 		Worker:  worker,
 	}
 
-	padchar := rune('X')
-	if flags.Size > 0 {
-		raw_message.Message = pad_string(raw_message.Message, padchar, flags.Size)
+	// feels like a waste to repeatedly get the size of Message so do it outside the loop
+	var do_padding bool = false
+	if flags.Size > len(flags.Message) {
+		do_padding = true
 	}
 
 	for i := 0; i < flags.Msg_Count || infinite; i++ {
 		raw_message.Timestamp = time.Now()
+
+		if do_padding {
+			raw_message.Message = pad_string(flags.Message, flags.Size)
+		}
 
 		if flags.Json_Out {
 			json_message, _ := json.Marshal(raw_message)
@@ -80,6 +94,8 @@ func send_logs(target string, worker int, flags *Flags, wg *sync.WaitGroup) {
 
 func main() {
 
+	rand.Seed(time.Now().UnixNano())
+
 	port := "514"
 	target := "127.0.0.1"
 
@@ -91,15 +107,23 @@ func main() {
 	flag.StringVar(&flags.Message, "message", "Test Message", "Message payload for every log message")
 	flag.IntVar(&flags.Msg_Count, "count", -1, "Number of messages to generate per worker (-1 for unlimited)")
 	flag.BoolVar(&flags.Json_Out, "json", false, "Format message as json")
-	flag.IntVar(&flags.Size, "size", 0, "Minimum size of message string, pads message to this size if it's less than")
+	flag.IntVar(&flags.Size, "size", 0, "Minimum size of message string, pads message with random characters to this size if it's less than")
 
 	flag.Parse()
 
-	fmt.Printf("Spawning %d workers to each generate %d log messages every second\n", flags.Workers, flags.Msg_Rate)
+	fmt.Printf("Spawning %d worker(s) to each generate %d log message(s) every second\n", flags.Workers, flags.Msg_Rate)
 	fmt.Printf("Message source: %s\n", flags.Source)
 	fmt.Printf("Message text: %s\n", flags.Message)
-	fmt.Printf("Total per worker: ")
+	if flags.Size > 0 {
+		if flags.Size >= len(flags.Message) {
+			fmt.Printf("Minimum size for Message field: %d\n", flags.Size)
+		} else {
+			fmt.Printf("Message field length already greater than minimum size (%d)\n", flags.Size)
+			fmt.Printf("Message field size is: %d\n", len(flags.Message))
+		}
+	}
 
+	fmt.Printf("Total messages generated per worker: ")
 	if flags.Msg_Count == 0 {
 		fmt.Printf("Unlimited\n")
 	} else {
