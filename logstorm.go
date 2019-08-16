@@ -10,7 +10,16 @@ import (
 	"time"
 )
 
-func send_logs(target string, worker int, msg_rate int, msg_count int, source string, message string, json_out bool, wg *sync.WaitGroup) {
+type Flags struct {
+	Msg_Rate  int
+	Workers   int
+	Source    string
+	Message   string
+	Msg_Count int
+	Json_Out  bool
+}
+
+func send_logs(target string, worker int, flags *Flags, wg *sync.WaitGroup) {
 	defer wg.Done()
 
 	sysLog, err := syslog.Dial("udp", target,
@@ -28,26 +37,26 @@ func send_logs(target string, worker int, msg_rate int, msg_count int, source st
 
 	var infinite bool = false
 
-	if msg_count < 0 {
+	if flags.Msg_Count < 0 {
 		infinite = true
 	}
 
-	for i := 0; i < msg_count || infinite; i++ {
+	for i := 0; i < flags.Msg_Count || infinite; i++ {
 		raw_message := LogMessage{
-			Source:    source,
+			Source:    flags.Source,
+			Message:   flags.Message,
 			Worker:    worker,
-			Message:   message,
 			Timestamp: time.Now(),
 		}
 
-		if json_out {
+		if flags.Json_Out {
 			json_message, _ := json.Marshal(raw_message)
 			fmt.Fprintf(sysLog, string(json_message))
 		} else {
 			fmt.Fprintf(sysLog, "From %s: worker %d at %s - %s", raw_message.Source, raw_message.Worker, raw_message.Timestamp, raw_message.Message)
 		}
 
-		time.Sleep(time.Duration(1000000000 / msg_rate))
+		time.Sleep(time.Duration(1000000000 / flags.Msg_Rate))
 	}
 	return
 }
@@ -57,40 +66,38 @@ func main() {
 	port := "514"
 	target := "127.0.0.1"
 
-	var msg_rate, workers, msg_count int
-	var source, message string
-	var json_out bool
+	flags := new(Flags)
 
-	flag.IntVar(&msg_rate, "rate", 1, "Number of messages each worker will generate every second")
-	flag.IntVar(&workers, "workers", 1, "Number of workers that will simultaneously generate log messages")
-	flag.StringVar(&source, "source", "logstorm", "String identifying the source of the log messages")
-	flag.StringVar(&message, "message", "Test Message", "Message payload for every log message")
-	flag.IntVar(&msg_count, "count", -1, "Number of messages to generate per worker (-1 for unlimited)")
-	flag.BoolVar(&json_out, "json", false, "Format message as json")
+	flag.IntVar(&flags.Msg_Rate, "rate", 1, "Number of messages each worker will generate every second")
+	flag.IntVar(&flags.Workers, "workers", 1, "Number of workers that will simultaneously generate log messages")
+	flag.StringVar(&flags.Source, "source", "logstorm", "String identifying the source of the log messages")
+	flag.StringVar(&flags.Message, "message", "Test Message", "Message payload for every log message")
+	flag.IntVar(&flags.Msg_Count, "count", -1, "Number of messages to generate per worker (-1 for unlimited)")
+	flag.BoolVar(&flags.Json_Out, "json", false, "Format message as json")
 
 	flag.Parse()
 
-	fmt.Printf("Spawning %d workers to each generate %d log messages every second\n", workers, msg_rate)
-	fmt.Printf("Message source: %s\n", source)
-	fmt.Printf("Message text: %s\n", message)
+	fmt.Printf("Spawning %d workers to each generate %d log messages every second\n", flags.Workers, flags.Msg_Rate)
+	fmt.Printf("Message source: %s\n", flags.Source)
+	fmt.Printf("Message text: %s\n", flags.Message)
 	fmt.Printf("Total per worker: ")
 
-	if msg_count == 0 {
-	  fmt.Printf("Unlimited\n")
+	if flags.Msg_Count == 0 {
+		fmt.Printf("Unlimited\n")
 	} else {
-	  fmt.Printf("%d\n", msg_count)
+		fmt.Printf("%d\n", flags.Msg_Count)
 	}
 
-	if json_out {
+	if flags.Json_Out {
 		fmt.Printf("Format: json \n")
 	} else {
 		fmt.Printf("Format: text \n")
 	}
 	var wg sync.WaitGroup
-	wg.Add(workers)
+	wg.Add(flags.Workers)
 
-	for i := 0; i < workers; i++ {
-		go send_logs(target+":"+port, i, msg_rate, msg_count, source, message, json_out, &wg)
+	for i := 0; i < flags.Workers; i++ {
+		go send_logs(target+":"+port, i, flags, &wg)
 	}
 
 	wg.Wait()
